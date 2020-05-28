@@ -1,8 +1,10 @@
 #include <iostream>
 #include <fstream>
 #include <windows.h>
+#include "Extention.hpp"
 
 using namespace std;
+using namespace ext;
 
 struct Book {
 	static const int BUFFER_SIZE = 20;
@@ -23,6 +25,8 @@ int main()
 	ofstream books;
 	Book tmp;
 	char x{};
+	int l, r, mid;
+	bool u;
 	char menu_action, edit_action; //вариации действий при выборе
 	bool end_edit; //флаг, что редактирование окончательно
 	bool sort_flag; //флаг об окончании сортировки
@@ -62,15 +66,12 @@ int main()
 			cin >> tmp.Author;
 			cout << "Введите цену книги: ";
 			cin >> tmp.Price;
-			cout << "Введите ID книги: ";
-			cin >> tmp.Id;
 			id_correct = 0;
 			while (id_correct == 0) {
 				id_correct = 1;
+				tmp.Id = GetRandomValue(1, 10000);
 				for (int i = 0; i < size_bin / sizeof(Book); i++) {
-					if (tmp.Id == ids[i]) {
-						cout << "Книга с таким ID уже существует. Повторите попытку." << endl;
-						cin >> tmp.Id;
+					if (tmp.Id == ids[i]) {						
 						id_correct = 0;
 						break;
 					}
@@ -169,9 +170,9 @@ int main()
 			cout << "----------------Поиск книги----------------" << endl << "Введите ID искомой книги: ";
 			int id_search;
 			cin >> id_search;
-			bool u = 0;
-			int l = 0, r = size_bin / sizeof(Book);
-			int mid;
+			l = 0; 
+			r = size_bin / sizeof(Book) - 1;
+			u = 0;
 			do {
 				sort_flag = 0;
 				for (int i = 0; i < size_bin / sizeof(Book) - 1; i++) {
@@ -187,12 +188,10 @@ int main()
 						break;
 				}
 			} while (sort_flag == 1);
-			int found_id;
 			while ((l <= r) && (u == 0)) {
 				mid = (l + r) / 2;
 				if (book_list[mid].Id == id_search) {
 					u = 1;
-					found_id = mid;
 				}
 				if (book_list[mid].Id > id_search) {
 					r = mid - 1;
@@ -201,13 +200,13 @@ int main()
 					l = mid + 1;
 				}
 			}
-			if (u == 1) {
+			if (u == true) {
 				cout << "Найдена книга с заданным ID. " << "Автор: " << book_list[mid].Author << ", название: " << book_list[mid].Title << ", цена: " << book_list[mid].Price << ", количество: " << book_list[mid].Quantity << endl;
 			}
 			else {
 				cout << "Книга с заданным ID не найдена. Повторите попытку позже." << endl;
 			}
-			Sleep(2000);
+			Sleep(1000);
 			x = 0;
 			system("pause");
 			cin.get(x);
