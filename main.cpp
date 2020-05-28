@@ -19,7 +19,9 @@ int main()
 {
 	/*books - для записи в файл, bookr - для чтения из него*/
 	setlocale(LC_ALL, "Rus");
+	Book tmpp; //для обмена между ячейками основного массива
 	ofstream books;
+	Book tmp;
 	char x{};
 	char menu_action, edit_action; //вариации действий при выборе
 	bool end_edit; //флаг, что редактирование окончательно
@@ -31,21 +33,15 @@ int main()
 	}
 	int size_bin; //размер бинарного файла в байтах
 	int tmp_id; //пользовательский айди при редактировании
-	int curr_id; //
+	int curr_id;
 	books.seekp(0, ios::end);
-	char tmp[20];
 	size_bin = books.tellp();
-	cout << size_bin << sizeof(Book);
 	books.close();
 	Book* book_list = new Book[size_bin / sizeof(Book)];
 	ifstream bookr;
 	bookr.open("books.bin", ios::binary);
 	bookr.read(reinterpret_cast<char*>(book_list), size_bin);
 	bookr.close();
-	for (int i = 0; i < size_bin / sizeof(Book); i++) {
-		cout << book_list[i].Author << ' ' << book_list[i].Title << ' ' << book_list[i].Id << ' ' << book_list[i].Price << ' ' << book_list[i].Quantity << endl;
-	}
-	Sleep(1000);
 	while (1) {
 		system("cls");
 		cout << "----------------Главное меню----------------" << endl << "Введите цифру для выполнения действия (1 - добавление книги, 2 - редактирование книги, 3 - поиск книги, 4 - сортированный список книг, 5 - статистика библиотеки, 6 - выход из программы): ";
@@ -56,7 +52,6 @@ int main()
 			delete[] book_list;
 			cout << "----------------Добавление книги----------------" << endl;
 			cout << "Введите название книги: ";
-			Book tmp;
 			cin >> tmp.Title;
 			cout << "Введите автора книги: ";
 			cin >> tmp.Author;
@@ -69,10 +64,16 @@ int main()
 			books.open("books.bin", ios::binary | ios::ate | ios::in);
 			books.seekp(0, ios::end);
 			books.write(reinterpret_cast<char*>(&tmp), sizeof(Book));
-			size_bin += sizeof(Book);
+			books.seekp(0, ios::end);
+			size_bin = books.tellp();
+			books.seekp(0);
 			books.close();
 			Book* book_list = new Book[size_bin / sizeof(Book)];
 			bookr.open("books.bin", ios::binary);
+			if (!bookr.is_open()) {
+				cerr << BOOKS_FILE_NAME << " не найден.";
+				return 2;
+			}
 			bookr.read(reinterpret_cast<char*>(book_list), size_bin);
 			bookr.close();
 			break;
@@ -136,18 +137,63 @@ int main()
 			}
 			break;
 		}
-		/*case '3':
+		case '3': {
 			system("cls");
-			cout << "----------------Поиск книги----------------" << endl;
-			break; */
-		case '4': {
-			system("cls");
-			cout << "----------------Сортированный список книг----------------" << endl;
-			Book tmpp; //для обмена между ячейками основного массива			
+			cout << "----------------Поиск книги----------------" << endl << "Введите ID искомой книги: ";
+			int id_search;
+			cin >> id_search;
+			bool u = 0;
+			int l = 0, r = size_bin / sizeof(Book);
+			int mid;
 			do {
 				sort_flag = 0;
 				for (int i = 0; i < size_bin / sizeof(Book) - 1; i++) {
-					for (int j = 0; j < book_list[0].BUFFER_SIZE; j++) {
+						if (book_list[i].Id == book_list[i + 1].Id) {
+							continue;
+						}
+						if (book_list[i].Id > book_list[i + 1].Id) {
+							tmpp = book_list[i];
+							book_list[i] = book_list[i + 1];
+							book_list[i + 1] = tmpp;
+							sort_flag = 1;
+						}
+						break;
+				}
+			} while (sort_flag == 1);
+			int found_id;
+			while ((l <= r) && (u == 0)) {
+				mid = (l + r) / 2;
+				if (book_list[mid].Id == id_search) {
+					u = 1;
+					found_id = mid;
+				}
+				if (book_list[mid].Id > id_search) {
+					r = mid - 1;
+				}
+				else {
+					l = mid + 1;
+				}
+			}
+			if (u == 1) {
+				cout << "Найдена книга с заданным ID. " << "Автор: " << book_list[mid].Author << ", название: " << book_list[mid].Title << ", ID: " << ", цена: " << book_list[mid].Price << ", количество: " << book_list[mid].Quantity << endl;
+			}
+			else {
+				cout << "Книга с заданным ID не найдена. Повторите попытку позже." << endl;
+			}
+			Sleep(2000);
+			x = 0;
+			system("pause");
+			cin.get(x);
+			break; 
+		}
+
+		case '4': {
+			system("cls");
+			cout << "----------------Сортированный список книг----------------" << endl;						
+			do {
+				sort_flag = 0;
+				for (int i = 0; i < size_bin / sizeof(Book) - 1; i++) {
+					for (int j = 0; j < 20; j++) {
 						if (book_list[i].Author[j] == book_list[i + 1].Author[j]) {
 							continue;
 						}
@@ -189,9 +235,9 @@ int main()
 		case '6': { return 0; }
 		default: {
 			cout << "Введена некорректная команда. Повторите попытку.";
+			Sleep(1000);
 			break;
 		}
 		}
-	}
-		
+	}		
 	}
