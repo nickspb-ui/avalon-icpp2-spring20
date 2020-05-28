@@ -25,7 +25,8 @@ int main()
 	char x{};
 	char menu_action, edit_action; //вариации действий при выборе
 	bool end_edit; //флаг, что редактирование окончательно
-	bool sort_flag;
+	bool sort_flag; //флаг об окончании сортировки
+	bool id_correct; //флаг об оригинальности введённого ID
 	books.open("books.bin", ios::binary | ios::ate | ios::in);
 	if (!books.is_open()) {
 		cerr << BOOKS_FILE_NAME << " не найден.";
@@ -42,6 +43,10 @@ int main()
 	bookr.open("books.bin", ios::binary);
 	bookr.read(reinterpret_cast<char*>(book_list), size_bin);
 	bookr.close();
+	int* ids = new int[size_bin / sizeof(Book)]; //массив для хранения всех айди книг
+	for (int i = 0; i < size_bin / sizeof(Book); i++) {
+		ids[i] = book_list[i].Id;
+	}
 	while (1) {
 		system("cls");
 		cout << "----------------Главное меню----------------" << endl << "Введите цифру для выполнения действия (1 - добавление книги, 2 - редактирование книги, 3 - поиск книги, 4 - сортированный список книг, 5 - статистика библиотеки, 6 - выход из программы): ";
@@ -59,6 +64,18 @@ int main()
 			cin >> tmp.Price;
 			cout << "Введите ID книги: ";
 			cin >> tmp.Id;
+			id_correct = 0;
+			while (id_correct == 0) {
+				id_correct = 1;
+				for (int i = 0; i < size_bin / sizeof(Book); i++) {
+					if (tmp.Id == ids[i]) {
+						cout << "Книга с таким ID уже существует. Повторите попытку." << endl;
+						cin >> tmp.Id;
+						id_correct = 0;
+						break;
+					}
+				}
+			}
 			cout << "Введите количество книг в библиотеке: ";
 			cin >> tmp.Quantity;
 			books.open("books.bin", ios::binary | ios::ate | ios::in);
@@ -68,7 +85,7 @@ int main()
 			size_bin = books.tellp();
 			books.seekp(0);
 			books.close();
-			Book* book_list = new Book[size_bin / sizeof(Book)];
+			book_list = new Book[size_bin / sizeof(Book)];
 			bookr.open("books.bin", ios::binary);
 			if (!bookr.is_open()) {
 				cerr << BOOKS_FILE_NAME << " не найден.";
@@ -76,6 +93,11 @@ int main()
 			}
 			bookr.read(reinterpret_cast<char*>(book_list), size_bin);
 			bookr.close();
+			delete[] ids;
+			ids = new int[size_bin / sizeof(Book)];
+			for (int i = 0; i < size_bin / sizeof(Book); i++) {
+				ids[i] = book_list[i].Id;
+			}
 			break;
 		}
 		case '2': {
@@ -112,7 +134,7 @@ int main()
 							break;
 						}
 						case '5': { 
-							end_edit == 1;
+							end_edit = 1;
 							break; 
 						}
 						default: { 
@@ -120,20 +142,25 @@ int main()
 							break;
 						}
 						}
-						break;
-					}
+						if (end_edit == 1) {
+							break;
+						}
+						cout << "Данные успешно изменены." << endl;
+						x = 0;
+						system("pause");
+						cin.get(x);
+						books.open("books.bin", ios::binary | ios::ate | ios::in);
+						books.seekp(0);
+						books.write(reinterpret_cast<char*>(book_list), size_bin);
+						books.close();
+						}
+					break;
 				}
 			}
 			if (curr_id == 0) {
 				cout << "Книга с таким ID не найдена. Повторите попытку позже.";
 				Sleep(3000);
 				break;
-			}
-			else {
-				books.open("books.bin", ios::binary | ios::ate | ios::in);
-				books.seekp(curr_id * sizeof(Book), ios::beg);
-				books.write(reinterpret_cast<char*>(&book_list[curr_id]), sizeof(Book));
-				books.close();
 			}
 			break;
 		}
