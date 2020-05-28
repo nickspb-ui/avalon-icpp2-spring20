@@ -175,7 +175,7 @@ int main()
 				}
 			}
 			if (u == 1) {
-				cout << "Найдена книга с заданным ID. " << "Автор: " << book_list[mid].Author << ", название: " << book_list[mid].Title << ", ID: " << ", цена: " << book_list[mid].Price << ", количество: " << book_list[mid].Quantity << endl;
+				cout << "Найдена книга с заданным ID. " << "Автор: " << book_list[mid].Author << ", название: " << book_list[mid].Title << ", цена: " << book_list[mid].Price << ", количество: " << book_list[mid].Quantity << endl;
 			}
 			else {
 				cout << "Книга с заданным ID не найдена. Повторите попытку позже." << endl;
@@ -193,7 +193,7 @@ int main()
 			do {
 				sort_flag = 0;
 				for (int i = 0; i < size_bin / sizeof(Book) - 1; i++) {
-					for (int j = 0; j < 20; j++) {
+					for (int j = 0; j < book_list[0].BUFFER_SIZE; j++) {
 						if (book_list[i].Author[j] == book_list[i + 1].Author[j]) {
 							continue;
 						}
